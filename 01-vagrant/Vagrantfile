@@ -1,0 +1,12 @@
+Vagrant.configure("2") do |config|
+    config.vm.box = "generic/debian11"
+
+    config.vm.network "forwarded_port", guest: 80, host: 8080
+    config.vm.network "forwarded_port", guest: 8080, host: 8081
+
+    config.vm.provider "virtualbox" do |vb|
+        vb.name = "hometask1_box"
+        # Customize the amount of memory on the VM:
+        vb.memory = "512"
+    end
+end
