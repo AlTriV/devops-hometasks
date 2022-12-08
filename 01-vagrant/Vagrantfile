@@ -1,25 +1,28 @@
 Vagrant.configure("2") do |config|
-    config.vm.box = "generic/debian11"
-
+    config.vm.box = "aliakseit/devops-hometask-01"
+    config.vm.box_version = "01.beta"
+    config.vm.synced_folder ".", "/vagrant"
     config.vm.network "forwarded_port", guest: 80, host: 8080
     config.vm.network "forwarded_port", guest: 8080, host: 8081
 
     config.vm.provider "virtualbox" do |vb|
-        vb.name = "hometask1_box"
+        vb.name = "hometask1-box2"
         # Customize the amount of memory on the VM:
         vb.memory = "512"
     end
-    
+
     config.vm.provision "shell", inline: <<-SHELL
-        apt update
-        apt install -y apache2 php php-fpm libapache2-mod-php
-        systemctl enable apache2
-        mkdir /var/www/php/
-        rm /var/www/html/index.html
-        curl https://raw.githubusercontent.com/Fenikks/devops-files/master/02-tools/files/index.html -o /var/www/html/index.html
-        curl https://raw.githubusercontent.com/Fenikks/devops-files/master/02-tools/files/index.php -o /var/www/php/index.php
-        echo "Listen 8080" >> /etc/apache2/ports.conf
-        echo -e "<VirtualHost *:8080>\n        ServerAdmin webmaster@localhost\n        DocumentRoot /var/www/php\n        ErrorLog ${APACHE_LOG_DIR}/error.log\n        CustomLog ${APACHE_LOG_DIR}/access.log combined\n</VirtualHost>" >> /etc/apache2/sites-available/000-default.conf
-        service apache2 restart
+        mkdir /var/www/php
+        cp /vagrant/conf/test-php-page.conf /etc/httpd/conf.d/test-php-page.conf
+        cp /vagrant/pages/index.php /var/www/php/index.php
+        cp /vagrant/pages/index.html /var/www/html/index.html
+        chmod 644 /etc/httpd/conf.d/test-php-page.conf
+        chmod 644 /var/www/php/index.php
+        chmod 644 /var/www/html/index.html
+        firewall-cmd --permanent --add-service=http
+        firewall-cmd --permanent --add-port=8080/tcp
+        firewall-cmd --reload
+        echo "Listen 8080" >> /etc/httpd/conf/httpd.conf
+        systemctl restart httpd
     SHELL
 end
