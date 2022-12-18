@@ -1,0 +1,59 @@
+---
+- name: Master provision
+  hosts: master
+
+  tasks:
+  - name: Set alias ll
+    replace:
+      path: /home/vagrant/.bashrc
+      regexp: "^#alias ll='ls -l'$"
+      replace: "alias ll='ls -la'"
+
+  - name: install packages
+    apt:
+      pkg:
+      - apache2
+      - php
+      - php-fpm
+      - libapache2-mod-php
+      state: present
+
+  - name: apache port enable
+    lineinfile:
+      path: /etc/apache2/ports.conf
+      line: Listen 8080
+      create: no
+
+  - name: create dynamic site config
+    copy:
+      src: /vagrant/conf/001-php-default.conf
+      dest: /etc/apache2/sites-available/001-php-default.conf
+
+  - name: enable dynamic site
+    shell: a2ensite 001-php-default
+
+  - name: restart apache
+    service:
+      name: apache2
+      state: restarted
+
+  - name: copy old static content
+    file:
+      path: /var/www/html/index.html
+      state: absent
+
+  - name: create dynamic content folder
+    file:
+      path: /var/www/php
+      state: directory
+      mode: '0755'
+
+  - name: copy static content
+    copy:
+      src: /vagrant/pages/index.html
+      dest: /var/www/html/index.html
+
+  - name: copy dynamic content
+    copy:
+      src: /vagrant/pages/index.php
+      dest: /var/www/php/index.php
