@@ -1,0 +1,50 @@
+Vagrant.configure("2") do |config|
+    config.vm.box = "generic/debian11"
+
+    config.vm.synced_folder ".", "/vagrant"
+
+    config.vm.network "forwarded_port", guest: 80, host: 8080
+    config.vm.network "forwarded_port", guest: 8080, host: 8081
+
+    config.vm.provider "virtualbox" do |vb|
+        vb.name = "hometask2_box"
+        # Customize the amount of memory on the VM:
+        vb.memory = "1024"
+    end
+    
+    config.vm.provision "shell", inline: <<-SHELL
+        #install lxc
+        apt update
+        apt install -y lxc lxc-templates
+        systemctl start lxc
+        #copy lxc config files for container1, container2
+        mkdir -p ~/.config/lxc
+        cp /vagrant/config/01-static-site.conf ~/.config/lxc
+        cp /vagrant/config/02-dynamic-site.conf ~/.config/lxc
+        cat /vagrant/config/lxc-net > /etc/default/lxc-net
+        lxc-create -t download -n container1 -f ~/.config/lxc/01-static-site.conf -- -d centos -r 8-Stream -a amd64
+        lxc-create -t download -n container2 -f ~/.config/lxc/02-dynamic-site.conf -- -d centos -r 8-Stream -a amd64
+        lxc-start container1
+        lxc-start container2
+        sleep 10
+        #install apache2 in container1
+        lxc-attach container1 -- yum update
+        lxc-attach container1 -- yum install -y httpd
+        lxc-attach container1 -- systemctl enable httpd
+        lxc-attach container1 -- systemctl start httpd
+        #install apache2, php in container2
+        lxc-attach container2 -- yum update
+        lxc-attach container2 -- yum install -y httpd php php-fpm
+        lxc-attach container2 -- systemctl enable httpd
+        lxc-attach container2 -- systemctl start php-fpm
+        lxc-attach container2 -- systemctl enable php-fpm
+        lxc-attach container2 -- systemctl start httpd
+        #forward ports from host to lxc containers
+        iptables -t nat -A PREROUTING -p tcp -i eth0 --dport 80 -j DNAT --to-destination 10.0.3.2:80
+        iptables -t nat -A PREROUTING -p tcp -i eth0 --dport 8080 -j DNAT --to-destination 10.0.3.3:80
+        #copy pages content to containers
+        cp /vagrant/pages/index.html /var/lib/lxc/container1/rootfs/var/www/html/
+        cp /vagrant/pages/index.php /var/lib/lxc/container2/rootfs/var/www/html/
+        echo "alias ll='ls -la'" >> /root/.bashrc
+    SHELL
+end
