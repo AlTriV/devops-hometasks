@@ -1,0 +1,122 @@
+---
+- name: Master provision
+  hosts: master
+  tasks:
+  - name: Enable puppet repo
+    shell: yum install -y https://yum.puppet.com/puppet7-release-el-8.noarch.rpm
+
+  - name: Install puppetserver, git
+    ansible.builtin.yum:
+      name: "{{ packages }}"
+    vars:
+      packages:
+      - git
+      - puppetserver
+
+  - name: Add gem to PATH
+    ansible.builtin.lineinfile:
+      path: ~/.bashrc
+      line: 'export PATH="/opt/puppetlabs/bin:/opt/puppetlabs/puppet/bin:$PATH"'
+
+  - name: Stop puppetserver before configuring
+    ansible.builtin.service:
+      name: puppetserver
+      state: stopped
+
+  - name: Change java configuration for puppetserver
+    ansible.builtin.replace:
+      path: /etc/sysconfig/puppetserver
+      regexp: 'JAVA_ARGS="-Xms2g -Xmx2g'
+      replace: 'JAVA_ARGS="-Xms256m -Xmx256m'
+
+  - name: Enabel puppet agent on master
+    ansible.builtin.lineinfile:
+      path: /etc/puppetlabs/puppet/puppet.conf
+      line: '{{ item }}'
+    with_items:
+      - '[agent]'
+      - 'server=master.puppet'
+      -  'runinterval = 5m'
+  
+  - name: Install r10k
+    shell: /opt/puppetlabs/puppet/bin/gem install r10k
+
+  - name: Create r10k config folder
+    file:
+      path: /etc/puppetlabs/r10k/
+      state: directory
+      mode: '0755'
+
+  - name: Copy r10k config
+    ansible.builtin.copy:
+      src: /vagrant/conf/r10k.yaml
+      dest: /etc/puppetlabs/r10k/r10k.yaml
+
+  - name: Start and enable puppetserver
+    ansible.builtin.service:
+      name: puppetserver
+      state: started
+      enabled: yes
+
+  - name: Enable and start puppet-agent
+    ansible.builtin.service:
+      name: puppet
+      state: started
+      enabled: yes
+
+  - name: Deploy r10k environment
+    shell: /opt/puppetlabs/puppet/bin/r10k deploy environment -p
+
+   
+- name: Pre-config slaves provision
+  hosts: 
+    - slave1.puppet
+    - slave2.puppet
+  
+  tasks:
+  - name: Enable password authentification
+    ansible.builtin.replace:
+      path: /etc/ssh/sshd_config
+      regexp: '^PasswordAuthentication no$'
+      replace: 'PasswordAuthentication yes'
+    notify:
+    - Restart sshd
+
+  handlers:
+  - name: Restart sshd
+    service:
+      name: sshd
+      state: restarted
+
+
+- name: Slaves provision
+  hosts: slaves
+  tasks:
+  - name: Enable puppet repo
+    shell: yum install -y https://yum.puppet.com/puppet7-release-el-8.noarch.rpm
+
+  - name: Install puppet-agent
+    ansible.builtin.yum:
+      name:
+        - puppet-agent
+      state: latest
+
+  - name: Enabel puppet agent on master
+    ansible.builtin.lineinfile:
+      path: /etc/puppetlabs/puppet/puppet.conf
+      line: '{{ item }}'
+    with_items:
+      - '[agent]'
+      - 'server=master.puppet'
+      -  'runinterval = 1m'
+
+  - name: Add master.puppet in hosts
+    ansible.builtin.lineinfile:
+      path: /etc/hosts
+      line: '192.168.50.25 master.puppet'
+
+  - name: Enable and start puppet-agent
+    ansible.builtin.service:
+      name: puppet
+      state: started
+      enabled: yes
