@@ -9,5 +9,7 @@ jobs:
     steps:
       - name: Ckeckout repository
         uses: actions/checkout@v3
+        with:
+          repository: AlTriV/devops-files
       - name: Build wcg docker image 
-        run: cd ./11-github-actions && ls -la
+        run: cd ./11-github-actions && docker build -t wcg -f ./Dockerfile.multi .
