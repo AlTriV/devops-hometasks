@@ -10,6 +10,6 @@ jobs:
       - name: Ckeckout repository
         uses: actions/checkout@v3
         with:
-          repository: AlTriV/devops-files
+          repository: AlTriV/devops-hometasks
       - name: Build wcg docker image 
         run: cd ./11-github-actions && docker build -t wcg -f ./Dockerfile.multi .
