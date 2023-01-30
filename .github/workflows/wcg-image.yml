@@ -1,8 +1,10 @@
 name: Create WCG docker image
 run-name: ${{ github.actor }} start creating WCG docker image
-on: [push]
+on:
+  workflow_dispatch:
+  push:
 jobs:
   Build-wcg-image:
     runs-on: self-hosted
     steps:
-      - run: ls ${{ github.workspace }} 
+      - run: ls ${{ github.repository }}
