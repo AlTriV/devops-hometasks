@@ -6,8 +6,6 @@ on:
 jobs:
   build-wcg-image:
     runs-on: self-hosted
-    outputs:
-      owner_name: ${{ steps.wcg_build }}
     steps:
       - name: Ckeckout repository
         uses: actions/checkout@v3
