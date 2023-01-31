@@ -12,4 +12,7 @@ jobs:
         with:
           repository: AlTriV/devops-hometasks
       - name: Build wcg docker image 
-        run: cd ./11-github-actions && docker build -t wcg -f ./Dockerfile.multi .
+        run: |
+          cd ./11-github-actions
+          OWNER=$(echo ${{ GITHUB_REPOSITORY_OWNER }} | tr '[:upper:]' '[:lower:]')
+          docker build -t ghcr.io/$OWNER/wcg:latest -t ghcr.io/$OWNER/wcg:${{ github.sha }} -f ./Dockerfile.multi .
