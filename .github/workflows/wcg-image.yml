@@ -23,6 +23,7 @@ jobs:
     steps:
       - name: Connect to GitHub registry
         run: |
+          echo $OWNER
           echo ${{ secrets.ACTION_TOKEN }} | docker login ghcr.io -u $OWNER --password-stdin
       - name: Upload wcg docker image
         run: |
