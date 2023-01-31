@@ -24,5 +24,5 @@ jobs:
       - name: Connect to GitHub registry
         run: |
           OWNER=$(echo $GITHUB_REPOSITORY_OWNER | tr '[:upper:]' '[:lower:]')
-          echo ${{ secrets.ACTION_TOKEN }}
+          echo $OWNER
           echo ${{ secrets.ACTION_TOKEN }} | docker login ghcr.io -u $OWNER --password-stdin
