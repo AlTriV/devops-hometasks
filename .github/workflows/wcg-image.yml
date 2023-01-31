@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
 jobs:
-  Build-wcg-image:
+  build-wcg-image:
     runs-on: self-hosted
     steps:
       - name: Ckeckout repository
@@ -15,8 +15,14 @@ jobs:
         run: |
           cd ./11-github-actions
           OWNER=$(echo $GITHUB_REPOSITORY_OWNER | tr '[:upper:]' '[:lower:]')
-          docker build -t wcg:latest -t ghcr.io/$OWNER/wcg:latest -t ghcr.io/$OWNER/wcg:${{ github.sha }} -f ./Dockerfile.multi .
-      - name: Upload to GitHub registry
+          docker build -t wcg:latest -t ghcr.io/$OWNER/wcg:latest -t ghcr.io/$OWNER/wcg:${{ github.sha }} -f ./Dockerfile.multi . 
+  
+  deploy-wcg-image:
+    needs: build-wcg-image
+    runs-on: self-hosted
+    steps:
+      - name: Connect to GitHub registry
         run: |
+          OWNER=$(echo $GITHUB_REPOSITORY_OWNER | tr '[:upper:]' '[:lower:]')
           echo ${{ secrets.ACTION_TOKEN }}
-          echo $USERNAME
+          echo ${{ secrets.ACTION_TOKEN }} | docker login ghcr.io -u $OWNER --password-stdin
