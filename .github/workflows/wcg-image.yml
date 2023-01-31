@@ -14,7 +14,7 @@ jobs:
       - name: Build wcg docker image 
         run: |
           cd ./11-github-actions
-          OWNER=$(echo $GITHUB_REPOSITORY_OWNER | tr '[:upper:]' '[:lower:]')
+          export OWNER=$(echo $GITHUB_REPOSITORY_OWNER | tr '[:upper:]' '[:lower:]')
           docker build -t wcg:latest -t ghcr.io/$OWNER/wcg:latest -t ghcr.io/$OWNER/wcg:${{ github.sha }} -f ./Dockerfile.multi . 
   
   deploy-wcg-image:
@@ -23,7 +23,6 @@ jobs:
     steps:
       - name: Connect to GitHub registry
         run: |
-          OWNER=$(echo $GITHUB_REPOSITORY_OWNER | tr '[:upper:]' '[:lower:]')
           echo ${{ secrets.ACTION_TOKEN }} | docker login ghcr.io -u $OWNER --password-stdin
       - name: Upload wcg docker image
         run: |
