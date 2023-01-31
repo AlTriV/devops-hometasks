@@ -24,5 +24,8 @@ jobs:
       - name: Connect to GitHub registry
         run: |
           OWNER=$(echo $GITHUB_REPOSITORY_OWNER | tr '[:upper:]' '[:lower:]')
-          echo $OWNER
           echo ${{ secrets.ACTION_TOKEN }} | docker login ghcr.io -u $OWNER --password-stdin
+      - name: Upload wcg docker image
+        run: |
+          docker push ghcr.io/$OWNER/wcg:latest
+          docker push ghcr.io/$OWNER/wcg:${{ github.sha }}
