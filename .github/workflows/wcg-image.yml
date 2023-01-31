@@ -22,7 +22,7 @@ jobs:
     needs: build-wcg-image
     runs-on: self-hosted
     steps:
-      - name: Upload wcg docker image
+      - name: Deploy wcg docker image
         run: |
           OWNER=$(echo $GITHUB_REPOSITORY_OWNER | tr '[:upper:]' '[:lower:]')
           echo ${{ secrets.ACTION_TOKEN }} | docker login ghcr.io -u $OWNER --password-stdin
