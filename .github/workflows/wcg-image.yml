@@ -14,6 +14,6 @@ jobs:
       - name: Build wcg docker image 
         run: |
           cd ./11-github-actions
-          echo ${{ env.GITHUB_REPOSITORY_OWNER }}
-          export OWNER=$(echo ${{ env.GITHUB_REPOSITORY_OWNER }} | tr '[:upper:]' '[:lower:]')
+          echo $GITHUB_REPOSITORY_OWNER
+          OWNER=$(echo $GITHUB_REPOSITORY_OWNER | tr '[:upper:]' '[:lower:]')
           docker build -t ghcr.io/$OWNER/wcg:latest -t ghcr.io/$OWNER/wcg:${{ github.sha }} -f ./Dockerfile.multi .
