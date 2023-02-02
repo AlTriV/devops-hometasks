@@ -5,7 +5,7 @@ on:
   push:
 jobs:
   build-wcg-image:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Ckeckout repository
         uses: actions/checkout@v3
@@ -17,11 +17,6 @@ jobs:
           cd ./11-github-actions
           OWNER=$(echo $GITHUB_REPOSITORY_OWNER | tr '[:upper:]' '[:lower:]')
           docker build -t wcg:latest -t ghcr.io/$OWNER/wcg:latest -t ghcr.io/$OWNER/wcg:${{ github.sha }} -f ./Dockerfile.multi . 
-  
-  deploy-wcg-image:
-    needs: build-wcg-image
-    runs-on: self-hosted
-    steps:
       - name: Deploy wcg docker image
         run: |
           OWNER=$(echo $GITHUB_REPOSITORY_OWNER | tr '[:upper:]' '[:lower:]')
